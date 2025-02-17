@@ -3,36 +3,36 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="照片取色器">
-  <main class="container flex-col justify-between h-100v mx-auto">
+  <main class="container flex-col justify-between h-100dvh mx-auto">
     <div
-      class="relative flex items-center bg-white h-14 drop-shadow-[5px_-15px_50px_rgba(0,0,0,0.25)]"
+      class="relative flex items-center bg-warm-gray-100 h-14 border-b-solid border-b-warm-gray-200"
     >
       <input type="file" id="fileInput" accept="image/*" hidden />
-      <p class="text-center fixed left-2 p-2 select-none">照片取色器</p>
+      <p class="text-center fixed left-2 p-2 select-none text-black">取色器</p>
       <label
         class="fixed right-2 p-2 rounded-full bg-blue-600 text-white text-sm w-18 h-6 font-bold text-center cursor-pointer flex justify-center items-center"
         for="fileInput"
         class="upload-btn">上传照片</label
       >
     </div>
-    <div class="image-container w-full h-50vh! flex-col relative">
+    <div class="image-container w-full h-50dvh! flex-col relative">
       <canvas class="w-full h-full" id="mainCanvas"></canvas>
       <div></div>
       <canvas
-        class="absolute top-2 right-2 w-24 h-24 z-20 border-solid border-gray-200 duration-200 transition-all opacity-100"
+        class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-sm"
         id="zoomCanvas"></canvas>
     </div>
 
     <div class="relative w-full color-info flex items-center relative h-12">
       <div class="color-box w-full h-full"></div>
       <span
-        class="color-value fixed right-0 bg-black text-white text-sm font-thin italic h-12 w-32 flex items-center justify-center"
+        class="color-value absolute right-0 text-white text-sm font-thin italic h-12 w-32 flex items-center justify-center"
         >#FFFFFF</span
       >
     </div>
 
     <div
-      class="touchpad bg-gray-1 h-30vh min-h-20vh flex items-center justify-center text-2xl text-gray-2 select-none"
+      class="touchpad bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 select-none"
     >
       触控区域
     </div>
@@ -297,8 +297,44 @@ import Layout from "../layouts/Layout.astro";
     zoomCtx: CanvasRenderingContext2D | null;
   let sourceImage: ImageBitmap | null = null;
   let pickerPos = { x: 0, y: 0 };
+  const colorValue = document.querySelector(".color-value");
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
+  // 获取颜色的反色
+  function getComplementaryColor(hexColor: string) {
+    // 去除 # 符号
+    if (hexColor.startsWith("#")) {
+      hexColor = hexColor.slice(1);
+    }
+
+    // 确保输入是有效的 6 位十六进制颜色值
+    if (hexColor.length !== 6) {
+      throw new Error("输入的十六进制颜色值必须是 6 位。");
+    }
+
+    // 提取 RGB 分量
+    const r = parseInt(hexColor.slice(0, 2), 16);
+    const g = parseInt(hexColor.slice(2, 4), 16);
+    const b = parseInt(hexColor.slice(4, 6), 16);
+
+    // 计算反色的 RGB 分量
+    const complementaryR = 255 - r;
+    const complementaryG = 255 - g;
+    const complementaryB = 255 - b;
+
+    // 将反色的 RGB 分量转换为十六进制字符串
+    const toHex = (value) => {
+      const hex = value.toString(16);
+      return hex.length === 1 ? "0" + hex : hex;
+    };
+
+    const complementaryHexR = toHex(complementaryR);
+    const complementaryHexG = toHex(complementaryG);
+    const complementaryHexB = toHex(complementaryB);
+
+    // 拼接反色的十六进制字符串并添加 # 符号
+    return "#" + complementaryHexR + complementaryHexG + complementaryHexB;
+  }
 
   // 初始化Canvas
   function initCanvas() {
@@ -329,18 +365,18 @@ import Layout from "../layouts/Layout.astro";
     const reader = new FileReader();
     reader.onload = async (event) => {
       const img = new Image();
-      img.src = event.target.result;
+      img.src = event!.target!.result;
 
       await new Promise((resolve) => (img.onload = resolve));
       sourceImage = await createImageBitmap(img);
 
       const container = document.querySelector(".image-container");
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
+      const containerWidth = container!.clientWidth;
+      const containerHeight = container!.clientHeight;
 
       // 配置Canvas物理尺寸
-      mainCanvas.width = containerWidth * 0.7 * dpr;
-      mainCanvas.height = containerHeight * 0.7 * dpr;
+      mainCanvas.width = containerWidth * 0.5 * dpr;
+      mainCanvas.height = containerHeight * 0.5 * dpr;
       mainCanvas.style.width = `${containerWidth}px`;
       mainCanvas.style.height = `${containerHeight}px`;
 
@@ -436,6 +472,7 @@ import Layout from "../layouts/Layout.astro";
     const hex = `#${((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1)}`;
     document.querySelector(".color-box").style.backgroundColor = hex;
     document.querySelector(".color-value").textContent = hex;
+    colorValue.style.color = getComplementaryColor(hex);
 
     // 计算反色
     const inverseR = 255 - pixel[0];
