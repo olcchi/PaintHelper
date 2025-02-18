@@ -17,7 +17,7 @@ import Layout from "../layouts/Layout.astro";
     </div>
     <div class="image-container w-full h-50dvh! flex-col relative">
       <canvas class="w-full h-full" id="mainCanvas"></canvas>
-      <div></div>
+      <canvas id="pickerCanvas" class="absolute left-0 top-0"></canvas>
       <canvas
         class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-sm"
         id="zoomCanvas"></canvas>
@@ -39,291 +39,38 @@ import Layout from "../layouts/Layout.astro";
   </main>
 </Layout>
 
-<!-- <script>
-  let mainCanvas: HTMLCanvasElement, zoomCanvas: HTMLCanvasElement;
-  let mainCtx: CanvasRenderingContext2D | null,
-    zoomCtx: CanvasRenderingContext2D | null;
-  let sourceImage: ImageBitmap | null = null;
-  let pickerPos = { x: 0, y: 0 };
-  let isDragging = false;
-  const dpr = window.devicePixelRatio || 1;
-
-  // 初始化Canvas
-  function initCanvas() {
-    mainCanvas = document.getElementById("mainCanvas") as HTMLCanvasElement;
-    zoomCanvas = document.getElementById("zoomCanvas") as HTMLCanvasElement;
-
-    // 主画布配置
-    mainCtx = mainCanvas.getContext("2d", { willReadFrequently: true });
-    mainCanvas.style.touchAction = "none";
-
-    // 放大镜画布配置
-    zoomCtx = zoomCanvas.getContext("2d");
-    zoomCanvas.width = 50 * dpr;
-    zoomCanvas.height = 50 * dpr;
-    zoomCanvas.style.width = "100px";
-    zoomCanvas.style.height = "100px";
-    zoomCanvas.onclick = function () {
-      if (zoomCanvas.style.opacity === "0.25") zoomCanvas.style.opacity = "1";
-      else zoomCanvas.style.opacity = "0.25";
-    };
-  }
-
-  // 图片加载处理
-  document
-    .getElementById("fileInput")
-    ?.addEventListener("change", async (e) => {
-      const file = (e.target as HTMLInputElement)?.files?.[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const img = new Image();
-        img.src = event.target?.result as string;
-
-        await new Promise((resolve) => (img.onload = resolve));
-        sourceImage = await createImageBitmap(img);
-
-        const container = document.querySelector(".image-container")!;
-        const containerWidth = container.clientWidth;
-        const containerHeight = container.clientHeight;
-        const aspectRatio = img.width / img.height;
-
-        // 计算适应容器高度的尺寸
-        const displayHeight = containerHeight;
-        const displayWidth = displayHeight * aspectRatio;
-
-        // 配置Canvas物理尺寸
-        mainCanvas.width = containerWidth * 1 *dpr;
-        mainCanvas.height = containerHeight * 1 * dpr;
-        mainCanvas.style.width = `${containerWidth}px`;
-        mainCanvas.style.height = `${containerHeight}px`;
-
-        // 初始绘制
-        redrawCanvas();
-
-        // 初始化取色器位置
-        pickerPos = {
-          x: mainCanvas.width / 2,
-          y: mainCanvas.height / 2,
-        };
-        updateColorPicker();
-      };
-      reader.readAsDataURL(file);
-    });
-
-  // 统一重绘方法
-  function redrawCanvas() {
-    if (!sourceImage || !mainCtx) return;
-
-    // 清除画布
-    mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
-    // 计算图片的宽高比和 canvas 的宽高比
-    const imageAspectRatio = sourceImage.width / sourceImage.height;
-    const canvasAspectRatio = mainCanvas.width / mainCanvas.height;
-
-    let displayWidth, displayHeight, xOffset, yOffset;
-
-    if (imageAspectRatio > canvasAspectRatio) {
-        // 图片相对更宽，以 canvas 的宽度为基准进行缩放
-        displayWidth = mainCanvas.width;
-        displayHeight = mainCanvas.width / imageAspectRatio;
-    } else {
-        // 图片相对更高，以 canvas 的高度为基准进行缩放
-        displayHeight = mainCanvas.height;
-        displayWidth = mainCanvas.height * imageAspectRatio;
-    }
-
-    // 计算图片在 canvas 中居中显示的偏移量
-    xOffset = (mainCanvas.width - displayWidth) / 2;
-    yOffset = (mainCanvas.height - displayHeight) / 2;
-
-    // 绘制原始图片
-    mainCtx.drawImage(
-        sourceImage,
-        0, 0,
-        sourceImage.width, sourceImage.height,
-        xOffset, yOffset,
-        displayWidth, displayHeight
-    );
-}
-
-  // 更新取色器
-  function updateColorPicker() {
-    if (!mainCtx || !sourceImage) return;
-
-    // 计算图像在画布上的显示尺寸和偏移量
-    const aspectRatio = sourceImage.width / sourceImage.height;
-    const displayHeight = mainCanvas.height;
-    const displayWidth = displayHeight * aspectRatio;
-    const xOffset = (mainCanvas.width - displayWidth) / 2;
-
-    // 取色
-    // 计算取色点在原始图像上的坐标
-    const sourceX = Math.floor(
-      (pickerPos.x - xOffset) * (sourceImage.width / displayWidth)
-    );
-    const sourceY = Math.floor(
-      pickerPos.y * (sourceImage.height / displayHeight)
-    );
-
-    const tempCanvas = new OffscreenCanvas(1, 1);
-    const tempCtx = tempCanvas.getContext("2d");
-    tempCtx!.drawImage(sourceImage, sourceX, sourceY, 1, 1, 0, 0, 1, 1);
-    const pixel = tempCtx!.getImageData(0, 0, 1, 1).data;
-    const hex = `#${((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1)}`;
-    document.querySelector(".color-box")!.style.backgroundColor = hex;
-    document.querySelector(".color-value")!.textContent = hex;
-
-    // 计算反色
-    const inverseR = 255 - pixel[0];
-    const inverseG = 255 - pixel[1];
-    const inverseB = 255 - pixel[2];
-    const inverseHex = `#${((1 << 24) + (inverseR << 16) + (inverseG << 8) + inverseB).toString(16).slice(1)}`;
-
-    // 更新放大镜
-    if (zoomCtx) {
-      const zoomSize = 8 * dpr;
-      zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
-
-      const zoomSourceX = Math.floor(
-        (pickerPos.x - xOffset - zoomSize / 2) *
-          (sourceImage.width / displayWidth)
-      );
-      const zoomSourceY = Math.floor(
-        (pickerPos.y - zoomSize / 2) * (sourceImage.height / displayHeight)
-      );
-      const zoomSourceWidth = Math.ceil(
-        zoomSize * (sourceImage.width / displayWidth)
-      );
-      const zoomSourceHeight = Math.ceil(
-        zoomSize * (sourceImage.height / displayHeight)
-      );
-
-      zoomCtx.drawImage(
-        sourceImage,
-        zoomSourceX,
-        zoomSourceY,
-        zoomSourceWidth,
-        zoomSourceHeight,
-        0,
-        0,
-        zoomCanvas.width,
-        zoomCanvas.height
-      );
-    }
-
-    // 绘制十字准星到主画布
-    mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-    mainCtx.drawImage(
-      sourceImage,
-      0,
-      0,
-      sourceImage.width,
-      sourceImage.height,
-      xOffset,
-      0,
-      displayWidth,
-      displayHeight
-    );
-
-    const crosshairSize = 10 * dpr;
-    const lineWidth = 1 * dpr;
-    mainCtx.strokeStyle = inverseHex; // 使用反色作为准心颜色
-    mainCtx.lineWidth = lineWidth;
-
-    // 绘制水平线段
-    mainCtx.beginPath();
-    mainCtx.moveTo(pickerPos.x - crosshairSize / 2, pickerPos.y);
-    mainCtx.lineTo(pickerPos.x + crosshairSize / 2, pickerPos.y);
-    mainCtx.stroke();
-
-    // 绘制垂直线段
-    mainCtx.beginPath();
-    mainCtx.moveTo(pickerPos.x, pickerPos.y - crosshairSize / 2);
-    mainCtx.lineTo(pickerPos.x, pickerPos.y + crosshairSize / 2);
-    mainCtx.stroke();
-  }
-
-  // 触摸交互处理
-  const touchpad = document.querySelector(".touchpad");
-  let startX = 0,
-    startY = 0;
-
-  touchpad?.addEventListener("touchstart", (e: TouchEvent) => {
-    e.preventDefault();
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-    isDragging = true;
-  });
-
-  touchpad?.addEventListener("touchmove", (e: TouchEvent) => {
-    if (!isDragging || !sourceImage) return;
-    e.preventDefault();
-
-    const deltaX = e.touches[0].clientX - startX;
-    const deltaY = e.touches[0].clientY - startY;
-
-    pickerPos.x = Math.min(
-      Math.max(pickerPos.x + deltaX * dpr * 2, 0),
-      mainCanvas.width
-    );
-    pickerPos.y = Math.min(
-      Math.max(pickerPos.y + deltaY * dpr * 2, 0),
-      mainCanvas.height
-    );
-
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
-
-    // 优化性能的重绘
-    requestAnimationFrame(() => {
-      redrawCanvas();
-      updateColorPicker();
-    });
-  });
-
-  touchpad?.addEventListener("touchend", () => {
-    isDragging = false;
-  });
-
-  window.addEventListener("load", initCanvas);
-</script> -->
-
 <script>
-  let mainCanvas: HTMLCanvasElement, zoomCanvas: HTMLCanvasElement;
-  let mainCtx: CanvasRenderingContext2D | null,
-    zoomCtx: CanvasRenderingContext2D | null;
-  let sourceImage: ImageBitmap | null = null;
+  let mainCanvas:HTMLCanvasElement|null, zoomCanvas:HTMLCanvasElement|null, pickerCanvas:HTMLCanvasElement|null;
+  let mainCtx:CanvasRenderingContext2D|null, zoomCtx:CanvasRenderingContext2D|null, pickerCtx:CanvasRenderingContext2D|null;
+  let sourceImage:ImageBitmap|null = null;
   let pickerPos = { x: 0, y: 0 };
   const colorValue = document.querySelector(".color-value");
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
-  // 获取颜色的反色
-  function getComplementaryColor(hexColor: string) {
-    // 去除 # 符号
+
+  // color inverse
+  function getComplementaryColor(hexColor:string) {
     if (hexColor.startsWith("#")) {
       hexColor = hexColor.slice(1);
     }
 
-    // 确保输入是有效的 6 位十六进制颜色值
+    // check hex value
     if (hexColor.length !== 6) {
-      throw new Error("输入的十六进制颜色值必须是 6 位。");
+      throw new Error("error of hex value");
     }
 
-    // 提取 RGB 分量
+    // get r, g, b value
     const r = parseInt(hexColor.slice(0, 2), 16);
     const g = parseInt(hexColor.slice(2, 4), 16);
     const b = parseInt(hexColor.slice(4, 6), 16);
 
-    // 计算反色的 RGB 分量
+    // calculate complementary color
     const complementaryR = 255 - r;
     const complementaryG = 255 - g;
     const complementaryB = 255 - b;
 
-    // 将反色的 RGB 分量转换为十六进制字符串
-    const toHex = (value) => {
+    // convert to hex
+    const toHex = (value:any) => {
       const hex = value.toString(16);
       return hex.length === 1 ? "0" + hex : hex;
     };
@@ -332,40 +79,48 @@ import Layout from "../layouts/Layout.astro";
     const complementaryHexG = toHex(complementaryG);
     const complementaryHexB = toHex(complementaryB);
 
-    // 拼接反色的十六进制字符串并添加 # 符号
+    // return hex color
     return "#" + complementaryHexR + complementaryHexG + complementaryHexB;
   }
 
-  // 初始化Canvas
+  // init canvas
   function initCanvas() {
-    mainCanvas = document.getElementById("mainCanvas");
-    zoomCanvas = document.getElementById("zoomCanvas");
+    mainCanvas = document.getElementById("mainCanvas") as HTMLCanvasElement;
+    zoomCanvas = document.getElementById("zoomCanvas") as HTMLCanvasElement;
+    pickerCanvas = document.getElementById("pickerCanvas") as HTMLCanvasElement;
 
-    // 主画布配置
+    // config main canvas
     mainCtx = mainCanvas.getContext("2d", { willReadFrequently: true });
     mainCanvas.style.touchAction = "none";
 
-    // 放大镜画布配置
+    // config zoom canvas
     zoomCtx = zoomCanvas.getContext("2d");
     zoomCanvas.width = 50 * dpr;
     zoomCanvas.height = 50 * dpr;
     zoomCanvas.style.width = "100px";
     zoomCanvas.style.height = "100px";
     zoomCanvas.onclick = function () {
-      if (zoomCanvas.style.opacity === "0.25") zoomCanvas.style.opacity = "1";
-      else zoomCanvas.style.opacity = "0.25";
+      if (zoomCanvas!.style.opacity === "0.25") zoomCanvas!.style.opacity = "1";
+      else zoomCanvas!.style.opacity = "0.25";
     };
+
+    // config picker canvas
+    pickerCtx = pickerCanvas.getContext("2d");
+    pickerCanvas.width = mainCanvas.width;
+    pickerCanvas.height = mainCanvas.height;
+    pickerCanvas.style.width = mainCanvas.style.width;
+    pickerCanvas.style.height = mainCanvas.style.height;
   }
 
-  // 图片加载处理
-  document.getElementById("fileInput").addEventListener("change", async (e) => {
+  // load image
+  document.getElementById("fileInput")?.addEventListener("change", async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = async (event) => {
       const img = new Image();
-      img.src = event!.target!.result;
+      img.src = event.target!.result as any;
 
       await new Promise((resolve) => (img.onload = resolve));
       sourceImage = await createImageBitmap(img);
@@ -374,50 +129,52 @@ import Layout from "../layouts/Layout.astro";
       const containerWidth = container!.clientWidth;
       const containerHeight = container!.clientHeight;
 
-      // 配置Canvas物理尺寸
-      mainCanvas.width = containerWidth * 0.5 * dpr;
-      mainCanvas.height = containerHeight * 0.5 * dpr;
-      mainCanvas.style.width = `${containerWidth}px`;
-      mainCanvas.style.height = `${containerHeight}px`;
+      // config canvas real size
+      mainCanvas!.width = containerWidth * 1 * dpr;
+      mainCanvas!.height = containerHeight * 1 * dpr;
+      mainCanvas!.style.width = `${containerWidth}px`;
+      mainCanvas!.style.height = `${containerHeight}px`;
 
-      // 初始绘制
-      redrawCanvas();
+      pickerCanvas!.width = mainCanvas!.width;
+      pickerCanvas!.height = mainCanvas!.height;
+      pickerCanvas!.style.width = mainCanvas!.style.width;
+      pickerCanvas!.style.height = mainCanvas!.style.height;
 
-      // 初始化取色器位置
+      // initial draw image
+      drawImageOnCanvas();
+
+      // initial color picker position
       pickerPos = {
-        x: mainCanvas.width / 2,
-        y: mainCanvas.height / 2,
+        x: mainCanvas!.width / 2,
+        y: mainCanvas!.height / 2,
       };
       updateColorPicker();
     };
     reader.readAsDataURL(file);
   });
 
-  // 统一重绘方法
-  function redrawCanvas() {
+  // 绘制图片到Canvas
+  function drawImageOnCanvas() {
     if (!sourceImage || !mainCtx) return;
 
-    // 清除画布
-    mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
-
     const imageAspectRatio = sourceImage.width / sourceImage.height;
-    const canvasAspectRatio = mainCanvas.width / mainCanvas.height;
+    const canvasAspectRatio = mainCanvas!.width / mainCanvas!.height;
 
     let displayWidth, displayHeight, xOffset, yOffset;
 
     if (imageAspectRatio > canvasAspectRatio) {
       // 图片相对更宽，以 canvas 的宽度为基准进行缩放
-      displayWidth = mainCanvas.width;
+      displayWidth = mainCanvas!.width;
       displayHeight = displayWidth / imageAspectRatio;
     } else {
       // 图片相对更高，以 canvas 的高度为基准进行缩放
-      displayHeight = mainCanvas.height;
+      displayHeight = mainCanvas!.height;
       displayWidth = displayHeight * imageAspectRatio;
     }
 
     // 计算图片在 canvas 中居中显示的偏移量
-    xOffset = (mainCanvas.width - displayWidth) / 2;
-    yOffset = (mainCanvas.height - displayHeight) / 2;
+    xOffset = (mainCanvas!.width - displayWidth) / 2;
+    yOffset = (mainCanvas!.height - displayHeight) / 2;
 
     // 绘制原始图片
     mainCtx.drawImage(
@@ -431,30 +188,32 @@ import Layout from "../layouts/Layout.astro";
       displayWidth,
       displayHeight
     );
+    console.log('image draw');
+    
   }
 
   // 更新取色器
   function updateColorPicker() {
-    if (!mainCtx || !sourceImage) return;
+    if (!mainCtx || !sourceImage || !pickerCtx) return;
 
     const imageAspectRatio = sourceImage.width / sourceImage.height;
-    const canvasAspectRatio = mainCanvas.width / mainCanvas.height;
+    const canvasAspectRatio = mainCanvas!.width / mainCanvas!.height;
 
     let displayWidth, displayHeight, xOffset, yOffset;
 
     if (imageAspectRatio > canvasAspectRatio) {
       // 图片相对更宽，以 canvas 的宽度为基准进行缩放
-      displayWidth = mainCanvas.width;
+      displayWidth = mainCanvas!.width;
       displayHeight = displayWidth / imageAspectRatio;
     } else {
       // 图片相对更高，以 canvas 的高度为基准进行缩放
-      displayHeight = mainCanvas.height;
+      displayHeight = mainCanvas!.height;
       displayWidth = displayHeight * imageAspectRatio;
     }
 
     // 计算图片在 canvas 中居中显示的偏移量
-    xOffset = (mainCanvas.width - displayWidth) / 2;
-    yOffset = (mainCanvas.height - displayHeight) / 2;
+    xOffset = (mainCanvas!.width - displayWidth) / 2;
+    yOffset = (mainCanvas!.height - displayHeight) / 2;
 
     // 取色
     // 计算取色点在原始图像上的坐标
@@ -467,11 +226,11 @@ import Layout from "../layouts/Layout.astro";
 
     const tempCanvas = new OffscreenCanvas(1, 1);
     const tempCtx = tempCanvas.getContext("2d");
-    tempCtx.drawImage(sourceImage, sourceX, sourceY, 1, 1, 0, 0, 1, 1);
-    const pixel = tempCtx.getImageData(0, 0, 1, 1).data;
+    tempCtx!.drawImage(sourceImage, sourceX, sourceY, 1, 1, 0, 0, 1, 1);
+    const pixel = tempCtx!.getImageData(0, 0, 1, 1).data;
     const hex = `#${((1 << 24) + (pixel[0] << 16) + (pixel[1] << 8) + pixel[2]).toString(16).slice(1)}`;
     document.querySelector(".color-box").style.backgroundColor = hex;
-    document.querySelector(".color-value").textContent = hex;
+    document.querySelector(".color-value")!.textContent = hex;
     colorValue.style.color = getComplementaryColor(hex);
 
     // 计算反色
@@ -483,15 +242,15 @@ import Layout from "../layouts/Layout.astro";
     // 更新放大镜
     if (zoomCtx) {
       const zoomSize = 8 * dpr;
-      zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+      zoomCtx.clearRect(0, 0, zoomCanvas!.width, zoomCanvas!.height);
 
       const zoomSourceX = Math.floor(
         (pickerPos.x - xOffset - zoomSize / 2) *
-          (sourceImage.width / displayWidth)
+        (sourceImage.width / displayWidth)
       );
       const zoomSourceY = Math.floor(
         (pickerPos.y - yOffset - zoomSize / 2) *
-          (sourceImage.height / displayHeight)
+        (sourceImage.height / displayHeight)
       );
       const zoomSourceWidth = Math.ceil(
         zoomSize * (sourceImage.width / displayWidth)
@@ -508,30 +267,31 @@ import Layout from "../layouts/Layout.astro";
         zoomSourceHeight,
         0,
         0,
-        zoomCanvas.width,
-        zoomCanvas.height
+        zoomCanvas!.width,
+        zoomCanvas!.height
       );
     }
 
-    // 绘制十字准星到主画布
-    redrawCanvas();
+    // 清除取色器画布
+    pickerCtx.clearRect(0, 0, pickerCanvas!.width, pickerCanvas!.height);
 
+    // 绘制十字准星到取色器画布
     const crosshairSize = 10 * dpr;
     const lineWidth = 1 * dpr;
-    mainCtx.strokeStyle = inverseHex; // 使用反色作为准心颜色
-    mainCtx.lineWidth = lineWidth;
+    pickerCtx.strokeStyle = inverseHex; // 使用反色作为准心颜色
+    pickerCtx.lineWidth = lineWidth;
 
     // 绘制水平线段
-    mainCtx.beginPath();
-    mainCtx.moveTo(pickerPos.x - crosshairSize / 2, pickerPos.y);
-    mainCtx.lineTo(pickerPos.x + crosshairSize / 2, pickerPos.y);
-    mainCtx.stroke();
+    pickerCtx.beginPath();
+    pickerCtx.moveTo(pickerPos.x - crosshairSize / 2, pickerPos.y);
+    pickerCtx.lineTo(pickerPos.x + crosshairSize / 2, pickerPos.y);
+    pickerCtx.stroke();
 
     // 绘制垂直线段
-    mainCtx.beginPath();
-    mainCtx.moveTo(pickerPos.x, pickerPos.y - crosshairSize / 2);
-    mainCtx.lineTo(pickerPos.x, pickerPos.y + crosshairSize / 2);
-    mainCtx.stroke();
+    pickerCtx.beginPath();
+    pickerCtx.moveTo(pickerPos.x, pickerPos.y - crosshairSize / 2);
+    pickerCtx.lineTo(pickerPos.x, pickerPos.y + crosshairSize / 2);
+    pickerCtx.stroke();
   }
 
   // 触摸交互处理
@@ -539,14 +299,14 @@ import Layout from "../layouts/Layout.astro";
   let startX = 0;
   let startY = 0;
 
-  touchpad.addEventListener("touchstart", (e) => {
+  touchpad!.addEventListener("touchstart", (e) => {
     e.preventDefault();
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isDragging = true;
   });
 
-  touchpad.addEventListener("touchmove", (e) => {
+  touchpad!.addEventListener("touchmove", (e) => {
     if (!isDragging || !sourceImage) return;
     e.preventDefault();
 
@@ -555,27 +315,23 @@ import Layout from "../layouts/Layout.astro";
 
     pickerPos.x = Math.min(
       Math.max(pickerPos.x + deltaX * dpr * 2, 0),
-      mainCanvas.width
+      mainCanvas!.width
     );
     pickerPos.y = Math.min(
       Math.max(pickerPos.y + deltaY * dpr * 2, 0),
-      mainCanvas.height
+      mainCanvas!.height
     );
 
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 
     // 优化性能的重绘
-    requestAnimationFrame(() => {
-      redrawCanvas();
-      updateColorPicker();
-    });
+    requestAnimationFrame(updateColorPicker);
   });
 
-  touchpad!.addEventListener("touchend", () => {
+  touchpad.addEventListener("touchend", () => {
     isDragging = false;
   });
 
   window.addEventListener("load", initCanvas);
 </script>
-<style></style>
