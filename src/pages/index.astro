@@ -163,20 +163,20 @@ import Layout from "../layouts/Layout.astro";
     let displayWidth, displayHeight, xOffset, yOffset;
 
     if (imageAspectRatio > canvasAspectRatio) {
-      // 图片相对更宽，以 canvas 的宽度为基准进行缩放
+      // The image is relatively wider, and it is scaled based on the width of the canvas.
       displayWidth = mainCanvas!.width;
       displayHeight = displayWidth / imageAspectRatio;
     } else {
-      // 图片相对更高，以 canvas 的高度为基准进行缩放
+      // The image is relatively taller, so it is scaled based on the height of the canvas.
       displayHeight = mainCanvas!.height;
       displayWidth = displayHeight * imageAspectRatio;
     }
 
-    // 计算图片在 canvas 中居中显示的偏移量
+    // Calculate the offset for centering the image within the canvas.
     xOffset = (mainCanvas!.width - displayWidth) / 2;
     yOffset = (mainCanvas!.height - displayHeight) / 2;
 
-    // 绘制原始图片
+    // Draw the original image
     mainCtx.drawImage(
       sourceImage,
       0,
@@ -192,7 +192,7 @@ import Layout from "../layouts/Layout.astro";
     
   }
 
-  // 更新取色器
+  // update color picker
   function updateColorPicker() {
     if (!mainCtx || !sourceImage || !pickerCtx) return;
 
@@ -202,21 +202,21 @@ import Layout from "../layouts/Layout.astro";
     let displayWidth, displayHeight, xOffset, yOffset;
 
     if (imageAspectRatio > canvasAspectRatio) {
-      // 图片相对更宽，以 canvas 的宽度为基准进行缩放
+      // If the image is relatively wider, scale it based on the width of the canvas.
       displayWidth = mainCanvas!.width;
       displayHeight = displayWidth / imageAspectRatio;
     } else {
-      // 图片相对更高，以 canvas 的高度为基准进行缩放
+      // If the image is relatively taller, scale it based on the height of the canvas.
       displayHeight = mainCanvas!.height;
       displayWidth = displayHeight * imageAspectRatio;
     }
 
-    // 计算图片在 canvas 中居中显示的偏移量
+    // Calculate the offset for the image to be centered within the canvas.
     xOffset = (mainCanvas!.width - displayWidth) / 2;
     yOffset = (mainCanvas!.height - displayHeight) / 2;
 
-    // 取色
-    // 计算取色点在原始图像上的坐标
+    // pick color
+    // Calculate the coordinates of the color - picking point on the original image.
     const sourceX = Math.floor(
       (pickerPos.x - xOffset) * (sourceImage.width / displayWidth)
     );
@@ -233,13 +233,13 @@ import Layout from "../layouts/Layout.astro";
     document.querySelector(".color-value")!.textContent = hex;
     colorValue.style.color = getComplementaryColor(hex);
 
-    // 计算反色
+    // Calculate the complementary color
     const inverseR = 255 - pixel[0];
     const inverseG = 255 - pixel[1];
     const inverseB = 255 - pixel[2];
     const inverseHex = `#${((1 << 24) + (inverseR << 16) + (inverseG << 8) + inverseB).toString(16).slice(1)}`;
 
-    // 更新放大镜
+    // Update the zoom canvas
     if (zoomCtx) {
       const zoomSize = 8 * dpr;
       zoomCtx.clearRect(0, 0, zoomCanvas!.width, zoomCanvas!.height);
@@ -272,29 +272,29 @@ import Layout from "../layouts/Layout.astro";
       );
     }
 
-    // 清除取色器画布
+    // Clear the color picker canvas
     pickerCtx.clearRect(0, 0, pickerCanvas!.width, pickerCanvas!.height);
 
-    // 绘制十字准星到取色器画布
+    // Draw the crosshairs on the color picker canvas
     const crosshairSize = 10 * dpr;
     const lineWidth = 1 * dpr;
-    pickerCtx.strokeStyle = inverseHex; // 使用反色作为准心颜色
+    pickerCtx.strokeStyle = inverseHex; // Use the complementary color as the crosshair color
     pickerCtx.lineWidth = lineWidth;
 
-    // 绘制水平线段
+    // Draw a horizontal line segment
     pickerCtx.beginPath();
     pickerCtx.moveTo(pickerPos.x - crosshairSize / 2, pickerPos.y);
     pickerCtx.lineTo(pickerPos.x + crosshairSize / 2, pickerPos.y);
     pickerCtx.stroke();
 
-    // 绘制垂直线段
+    // Draw a vertical line segment
     pickerCtx.beginPath();
     pickerCtx.moveTo(pickerPos.x, pickerPos.y - crosshairSize / 2);
     pickerCtx.lineTo(pickerPos.x, pickerPos.y + crosshairSize / 2);
     pickerCtx.stroke();
   }
 
-  // 触摸交互处理
+  // Touch interaction handling
   const touchpad = document.querySelector(".touchpad");
   let startX = 0;
   let startY = 0;
@@ -325,7 +325,7 @@ import Layout from "../layouts/Layout.astro";
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 
-    // 优化性能的重绘
+    // Repainting for performance optimization
     requestAnimationFrame(updateColorPicker);
   });
 
