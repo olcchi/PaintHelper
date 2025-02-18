@@ -18,36 +18,38 @@ import Layout from "../layouts/Layout.astro";
         class="upload-btn">上传照片</label
       >
     </div>
-    <div class="image-container w-full h-50dvh! flex-col relative">
+    <div class="image-container w-full h-60dvh! flex-col relative">
       <canvas class="w-full h-full" id="mainCanvas"></canvas>
       <canvas id="pickerCanvas" class="absolute left-0 top-0"></canvas>
       <canvas
         class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-full border-2 drop-shadow-2xl border-solid border-warm-gray-200"
         id="zoomCanvas"></canvas>
     </div>
-
-    <div class="relative w-full color-info flex items-center relative h-12">
-      <div class="color-box w-full h-full"></div>
+<!-- 
+    <div class="relative w-full color-info flex items-center justify-center h-12">
       <span
-        class="color-value absolute right-0 text-white! bg-black text-sm font-thin italic h-12 w-32 flex items-center justify-center"
-        >#FFFFFF</span
-      >
-    </div>
+        class="color-value text-black! text-sm font-thin italic h-12 w-32 flex items-center justify-center"
+        >#FFFFFF</span>
+    </div> -->
 
     <div
-      class="touchpad bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 select-none"
+      class="color-box touchpad relative bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 select-none"
     >
-    <p>触控区域</p>
+    <span
+    class="color-value absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-16"
+    >#FFFFFF</span>
+    <i class="pointer i-tdesign-gesture-slide-left-and-right-filled p-5 transition-all duration-500"></i>
     </div>
   </main>
 </Layout>
 
 <script>
-  let mainCanvas:HTMLCanvasElement|null, zoomCanvas:HTMLCanvasElement|null, pickerCanvas:HTMLCanvasElement|null;
+  let mainCanvas:HTMLCanvasElement|null, zoomCanvas:HTMLCanvasElement|null, pickerCanvas:HTMLCanvasElement|null,pointer:HTMLElement;
   let mainCtx:CanvasRenderingContext2D|null, zoomCtx:CanvasRenderingContext2D|null, pickerCtx:CanvasRenderingContext2D|null;
   let sourceImage:ImageBitmap|null = null;
   let pickerPos = { x: 0, y: 0 };
   const colorValue = document.querySelector(".color-value");
+  const cursorPointer = document.querySelector('.pointer')
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
 
@@ -304,6 +306,8 @@ import Layout from "../layouts/Layout.astro";
 
   touchpad!.addEventListener("touchstart", (e) => {
     e.preventDefault();
+    if(cursorPointer.style.opacity !== '0')
+    cursorPointer!.style.opacity = '0'
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isDragging = true;
