@@ -8,9 +8,12 @@ import Layout from "../layouts/Layout.astro";
       class="relative flex items-center bg-warm-gray-100 h-14 border-b-solid border-b-warm-gray-200"
     >
       <input type="file" id="fileInput" accept="image/*" hidden />
-      <p class="text-center fixed left-2 p-2 select-none text-black">取色器</p>
+      <div class="absolute left-2 flex items-center justify-center">
+        <p class="text-center p-1 select-none text-black">取色器</p>
+        <i class="i-tdesign-color-invert-filled text-6"></i>
+      </div>
       <label
-        class="fixed right-2 p-2 rounded-full bg-blue-600 text-white text-sm w-18 h-6 font-bold text-center cursor-pointer flex justify-center items-center"
+        class="absolute right-2 p-2 rounded-full bg-blue-600 text-white text-sm w-18 h-6 font-bold text-center cursor-pointer flex justify-center items-center"
         for="fileInput"
         class="upload-btn">上传照片</label
       >
@@ -19,14 +22,14 @@ import Layout from "../layouts/Layout.astro";
       <canvas class="w-full h-full" id="mainCanvas"></canvas>
       <canvas id="pickerCanvas" class="absolute left-0 top-0"></canvas>
       <canvas
-        class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-sm"
+        class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-full border-2 drop-shadow-2xl border-solid border-warm-gray-200"
         id="zoomCanvas"></canvas>
     </div>
 
     <div class="relative w-full color-info flex items-center relative h-12">
       <div class="color-box w-full h-full"></div>
       <span
-        class="color-value absolute right-0 text-white text-sm font-thin italic h-12 w-32 flex items-center justify-center"
+        class="color-value absolute right-0 text-white! bg-black text-sm font-thin italic h-12 w-32 flex items-center justify-center"
         >#FFFFFF</span
       >
     </div>
@@ -34,7 +37,7 @@ import Layout from "../layouts/Layout.astro";
     <div
       class="touchpad bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 select-none"
     >
-      触控区域
+    <p>触控区域</p>
     </div>
   </main>
 </Layout>
@@ -276,7 +279,7 @@ import Layout from "../layouts/Layout.astro";
     pickerCtx.clearRect(0, 0, pickerCanvas!.width, pickerCanvas!.height);
 
     // Draw the crosshairs on the color picker canvas
-    const crosshairSize = 10 * dpr;
+    const crosshairSize = 20 * dpr;
     const lineWidth = 1 * dpr;
     pickerCtx.strokeStyle = inverseHex; // Use the complementary color as the crosshair color
     pickerCtx.lineWidth = lineWidth;
