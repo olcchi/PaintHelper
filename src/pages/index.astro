@@ -25,36 +25,37 @@ import Layout from "../layouts/Layout.astro";
         class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-full border-2 drop-shadow-2xl border-solid border-warm-gray-200"
         id="zoomCanvas"></canvas>
     </div>
-<!-- 
-    <div class="relative w-full color-info flex items-center justify-center h-12">
-      <span
-        class="color-value text-black! text-sm font-thin italic h-12 w-32 flex items-center justify-center"
-        >#FFFFFF</span>
-    </div> -->
-
     <div
-      class="color-box touchpad relative bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 select-none"
+      class="color-box touchpad relative bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 rounded-xl select-none"
     >
-    <span
-    class="color-value absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-16"
-    >#FFFFFF</span>
-    <i class="pointer i-tdesign-gesture-slide-left-and-right-filled p-5 transition-all duration-500"></i>
+      <span
+        class="color-value rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
+        >#FFFFFF</span
+      >
+      <i
+        class="pointer i-tdesign-gesture-slide-left-and-right-filled p-5 transition-all duration-500"
+      ></i>
     </div>
   </main>
 </Layout>
 
 <script>
-  let mainCanvas:HTMLCanvasElement|null, zoomCanvas:HTMLCanvasElement|null, pickerCanvas:HTMLCanvasElement|null,pointer:HTMLElement;
-  let mainCtx:CanvasRenderingContext2D|null, zoomCtx:CanvasRenderingContext2D|null, pickerCtx:CanvasRenderingContext2D|null;
-  let sourceImage:ImageBitmap|null = null;
+  let mainCanvas: HTMLCanvasElement | null,
+    zoomCanvas: HTMLCanvasElement | null,
+    pickerCanvas: HTMLCanvasElement | null,
+    pointer: HTMLElement;
+  let mainCtx: CanvasRenderingContext2D | null,
+    zoomCtx: CanvasRenderingContext2D | null,
+    pickerCtx: CanvasRenderingContext2D | null;
+  let sourceImage: ImageBitmap | null = null;
   let pickerPos = { x: 0, y: 0 };
   const colorValue = document.querySelector(".color-value");
-  const cursorPointer = document.querySelector('.pointer')
+  const cursorPointer = document.querySelector(".pointer");
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
 
   // color inverse
-  function getComplementaryColor(hexColor:string) {
+  function getComplementaryColor(hexColor: string) {
     if (hexColor.startsWith("#")) {
       hexColor = hexColor.slice(1);
     }
@@ -75,7 +76,7 @@ import Layout from "../layouts/Layout.astro";
     const complementaryB = 255 - b;
 
     // convert to hex
-    const toHex = (value:any) => {
+    const toHex = (value: any) => {
       const hex = value.toString(16);
       return hex.length === 1 ? "0" + hex : hex;
     };
@@ -118,45 +119,47 @@ import Layout from "../layouts/Layout.astro";
   }
 
   // load image
-  document.getElementById("fileInput")?.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  document
+    .getElementById("fileInput")
+    ?.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const img = new Image();
-      img.src = event.target!.result as any;
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const img = new Image();
+        img.src = event.target!.result as any;
 
-      await new Promise((resolve) => (img.onload = resolve));
-      sourceImage = await createImageBitmap(img);
+        await new Promise((resolve) => (img.onload = resolve));
+        sourceImage = await createImageBitmap(img);
 
-      const container = document.querySelector(".image-container");
-      const containerWidth = container!.clientWidth;
-      const containerHeight = container!.clientHeight;
+        const container = document.querySelector(".image-container");
+        const containerWidth = container!.clientWidth;
+        const containerHeight = container!.clientHeight;
 
-      // config canvas real size
-      mainCanvas!.width = containerWidth * 1 * dpr;
-      mainCanvas!.height = containerHeight * 1 * dpr;
-      mainCanvas!.style.width = `${containerWidth}px`;
-      mainCanvas!.style.height = `${containerHeight}px`;
+        // config canvas real size
+        mainCanvas!.width = containerWidth * 1 * dpr;
+        mainCanvas!.height = containerHeight * 1 * dpr;
+        mainCanvas!.style.width = `${containerWidth}px`;
+        mainCanvas!.style.height = `${containerHeight}px`;
 
-      pickerCanvas!.width = mainCanvas!.width;
-      pickerCanvas!.height = mainCanvas!.height;
-      pickerCanvas!.style.width = mainCanvas!.style.width;
-      pickerCanvas!.style.height = mainCanvas!.style.height;
+        pickerCanvas!.width = mainCanvas!.width;
+        pickerCanvas!.height = mainCanvas!.height;
+        pickerCanvas!.style.width = mainCanvas!.style.width;
+        pickerCanvas!.style.height = mainCanvas!.style.height;
 
-      // initial draw image
-      drawImageOnCanvas();
+        // initial draw image
+        drawImageOnCanvas();
 
-      // initial color picker position
-      pickerPos = {
-        x: mainCanvas!.width / 2,
-        y: mainCanvas!.height / 2,
+        // initial color picker position
+        pickerPos = {
+          x: mainCanvas!.width / 2,
+          y: mainCanvas!.height / 2,
+        };
+        updateColorPicker();
       };
-      updateColorPicker();
-    };
-    reader.readAsDataURL(file);
-  });
+      reader.readAsDataURL(file);
+    });
 
   // 绘制图片到Canvas
   function drawImageOnCanvas() {
@@ -193,8 +196,7 @@ import Layout from "../layouts/Layout.astro";
       displayWidth,
       displayHeight
     );
-    console.log('image draw');
-    
+    console.log("image draw");
   }
 
   // update color picker
@@ -251,11 +253,11 @@ import Layout from "../layouts/Layout.astro";
 
       const zoomSourceX = Math.floor(
         (pickerPos.x - xOffset - zoomSize / 2) *
-        (sourceImage.width / displayWidth)
+          (sourceImage.width / displayWidth)
       );
       const zoomSourceY = Math.floor(
         (pickerPos.y - yOffset - zoomSize / 2) *
-        (sourceImage.height / displayHeight)
+          (sourceImage.height / displayHeight)
       );
       const zoomSourceWidth = Math.ceil(
         zoomSize * (sourceImage.width / displayWidth)
@@ -306,8 +308,7 @@ import Layout from "../layouts/Layout.astro";
 
   touchpad!.addEventListener("touchstart", (e) => {
     e.preventDefault();
-    if(cursorPointer.style.opacity !== '0')
-    cursorPointer!.style.opacity = '0'
+    if (cursorPointer.style.opacity !== "0") cursorPointer!.style.opacity = "0";
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     isDragging = true;
