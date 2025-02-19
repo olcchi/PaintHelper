@@ -29,7 +29,7 @@ import Layout from "../layouts/Layout.astro";
       class="color-box touchpad relative bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 rounded-xl select-none"
     >
       <span
-        class="color-value rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
+        class="color-value z-10 rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
         >#FFFFFF</span
       >
       <i
@@ -40,6 +40,8 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+import { navigate } from "astro:transitions/client";
+
   let mainCanvas: HTMLCanvasElement | null,
     zoomCanvas: HTMLCanvasElement | null,
     pickerCanvas: HTMLCanvasElement | null,
@@ -49,11 +51,10 @@ import Layout from "../layouts/Layout.astro";
     pickerCtx: CanvasRenderingContext2D | null;
   let sourceImage: ImageBitmap | null = null;
   let pickerPos = { x: 0, y: 0 };
-  const colorValue = document.querySelector(".color-value");
+  const colorValue:HTMLSpanElement | null = document.querySelector(".color-value");
   const cursorPointer = document.querySelector(".pointer");
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
-
   // color inverse
   function getComplementaryColor(hexColor: string) {
     if (hexColor.startsWith("#")) {
@@ -199,6 +200,18 @@ import Layout from "../layouts/Layout.astro";
     console.log("image draw");
   }
 
+   colorValue!.ontouchstart = async function (){
+    try{
+    //  const hexValue:string | undefined = colorValue?.innerText
+   alert(navigator.clipboard);
+    
+    //  await navigator.clipboard.writeText(colorValue?.innerText)
+    }
+    catch(error){
+      console.error('复制失败:', error);
+      alert(error);
+    }
+  }
   // update color picker
   function updateColorPicker() {
     if (!mainCtx || !sourceImage || !pickerCtx) return;
@@ -284,7 +297,7 @@ import Layout from "../layouts/Layout.astro";
 
     // Draw the crosshairs on the color picker canvas
     const crosshairSize = 20 * dpr;
-    const lineWidth = 1 * dpr;
+    const lineWidth = 2 * dpr;
     pickerCtx.strokeStyle = inverseHex; // Use the complementary color as the crosshair color
     pickerCtx.lineWidth = lineWidth;
 
