@@ -22,7 +22,7 @@ import Layout from "../layouts/Layout.astro";
       <canvas class="w-full h-full" id="mainCanvas"></canvas>
       <canvas id="pickerCanvas" class="absolute left-0 top-0"></canvas>
       <canvas
-        class="absolute top-1 right-1 w-24 h-24 z-20 duration-200 transition-all border-opacity-50 rounded-full border-2 drop-shadow-2xl border-solid border-warm-gray-200"
+        class="absolute  top-1 right-1 w-24 h-24 z-20 border-opacity-50 rounded-full border-2 drop-shadow-2xl border-solid border-warm-gray-200"
         id="zoomCanvas"></canvas>
     </div>
     <div
@@ -31,7 +31,10 @@ import Layout from "../layouts/Layout.astro";
       <span
         class="color-value z-10 rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
         >#FFFFFF</span
-      >
+      >      <span
+      class="CopiedSpan rounded-xl opacity-0 duration-200 absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
+      >已复制</span
+    >
       <i
         class="pointer i-tdesign-gesture-slide-left-and-right-filled p-5 transition-all duration-500"
       ></i>
@@ -40,12 +43,13 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
-import { navigate } from "astro:transitions/client";
 
   let mainCanvas: HTMLCanvasElement | null,
     zoomCanvas: HTMLCanvasElement | null,
     pickerCanvas: HTMLCanvasElement | null,
-    pointer: HTMLElement;
+    pointer: HTMLElement,
+    Copied: HTMLElement;
+
   let mainCtx: CanvasRenderingContext2D | null,
     zoomCtx: CanvasRenderingContext2D | null,
     pickerCtx: CanvasRenderingContext2D | null;
@@ -53,6 +57,7 @@ import { navigate } from "astro:transitions/client";
   let pickerPos = { x: 0, y: 0 };
   const colorValue:HTMLSpanElement | null = document.querySelector(".color-value");
   const cursorPointer = document.querySelector(".pointer");
+  const CopiedSpan = document.querySelector('.CopiedSpan')
   let isDragging = false;
   const dpr = window.devicePixelRatio || 1;
   // color inverse
@@ -106,9 +111,22 @@ import { navigate } from "astro:transitions/client";
     zoomCanvas.height = 50 * dpr;
     zoomCanvas.style.width = "100px";
     zoomCanvas.style.height = "100px";
+    let right  =  true
     zoomCanvas.onclick = function () {
-      if (zoomCanvas!.style.opacity === "0.25") zoomCanvas!.style.opacity = "1";
-      else zoomCanvas!.style.opacity = "0.25";
+    if(right){
+      zoomCanvas?.classList.remove('right-1')
+      zoomCanvas?.classList.add('left-1')
+      right = false
+    }else{
+      zoomCanvas?.classList.remove('left-1')
+      zoomCanvas?.classList.add('right-1')
+      right = true
+    }
+      // zoomCanvas!.style.opacity = "1";
+      //
+    zoomCanvas?.classList.add
+
+      // else zoomCanvas!.style.opacity = "0.25";
     };
 
     // config picker canvas
@@ -202,10 +220,18 @@ import { navigate } from "astro:transitions/client";
 
    colorValue!.ontouchstart = async function (){
     try{
-    //  const hexValue:string | undefined = colorValue?.innerText
-   alert(navigator.clipboard);
-    
-    //  await navigator.clipboard.writeText(colorValue?.innerText)
+     const hexValue:string | undefined = colorValue?.innerText    
+     await navigator.clipboard.writeText(hexValue as string)
+     CopiedSpan?.classList.add('z-20')
+     CopiedSpan?.classList.add('opacity-100!')
+    //  CopiedSpan?.classList.add('left-1')
+     setTimeout(() => {
+       CopiedSpan?.classList.remove('opacity-100!')
+      //  CopiedSpan?.classList.remove('left-1')
+      //  CopiedSpan?.classList.add('left-0')
+       CopiedSpan?.classList.remove('z-20')
+     }, 500);
+     
     }
     catch(error){
       console.error('复制失败:', error);
