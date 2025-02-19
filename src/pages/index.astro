@@ -32,7 +32,7 @@ import Layout from "../layouts/Layout.astro";
         class="color-value z-10 rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
         >#FFFFFF</span
       >      <span
-      class="CopiedSpan rounded-xl opacity-0 duration-200 absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
+      class="CopiedSpan rounded-xl opacity-100 duration-200 absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
       >已复制</span
     >
       <i
@@ -223,14 +223,7 @@ import Layout from "../layouts/Layout.astro";
      const hexValue:string | undefined = colorValue?.innerText    
      await navigator.clipboard.writeText(hexValue as string)
      CopiedSpan?.classList.add('z-20!')
-     CopiedSpan?.classList.add('opacity-100!')
-     CopiedSpan?.classList.remove('opacity-0')
-    //  CopiedSpan?.classList.add('left-1')
      setTimeout(() => {
-       CopiedSpan?.classList.remove('opacity-100!')
-      //  CopiedSpan?.classList.remove('left-1')
-      //  CopiedSpan?.classList.add('left-0')
-      CopiedSpan?.classList.add('opacity-0')
        CopiedSpan?.classList.remove('z-20!')
      }, 800);
      
