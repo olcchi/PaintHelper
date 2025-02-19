@@ -222,15 +222,15 @@ import Layout from "../layouts/Layout.astro";
     try{
      const hexValue:string | undefined = colorValue?.innerText    
      await navigator.clipboard.writeText(hexValue as string)
-     CopiedSpan?.classList.add('z-20')
+     CopiedSpan?.classList.add('z-20!')
      CopiedSpan?.classList.add('opacity-100!')
     //  CopiedSpan?.classList.add('left-1')
      setTimeout(() => {
        CopiedSpan?.classList.remove('opacity-100!')
       //  CopiedSpan?.classList.remove('left-1')
       //  CopiedSpan?.classList.add('left-0')
-       CopiedSpan?.classList.remove('z-20')
-     }, 500);
+       CopiedSpan?.classList.remove('z-20!')
+     }, 800);
      
     }
     catch(error){
