@@ -29,12 +29,10 @@ import Layout from "../layouts/Layout.astro";
       class="color-box touchpad relative bg-warm-gray-100 border-solid border-t-warm-gray-200 h-35dvh flex items-center justify-center text-2xl text-gray-2 rounded-xl select-none"
     >
       <span
-        class="color-value z-10 rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
+        class="color-value z-20 rounded-xl absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
         >#FFFFFF</span
-      >      <span
-      class="CopiedSpan rounded-xl opacity-100 duration-200 absolute top-1 left-1 text-sm font-thin italic flex items-center justify-center text-white! bg-dark-2 w-18"
-      >已复制</span
-    >
+      >
+      
       <i
         class="pointer i-tdesign-gesture-slide-left-and-right-filled p-5 transition-all duration-500"
       ></i>
@@ -222,9 +220,9 @@ import Layout from "../layouts/Layout.astro";
     try{
      const hexValue:string | undefined = colorValue?.innerText    
      await navigator.clipboard.writeText(hexValue as string)
-     CopiedSpan?.classList.add('z-20!')
+     colorValue!.innerHTML = '已复制'
      setTimeout(() => {
-       CopiedSpan?.classList.remove('z-20!')
+      colorValue!.innerHTML = hexValue as string
      }, 800);
      
     }
