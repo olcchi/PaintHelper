@@ -224,11 +224,13 @@ import Layout from "../layouts/Layout.astro";
      await navigator.clipboard.writeText(hexValue as string)
      CopiedSpan?.classList.add('z-20!')
      CopiedSpan?.classList.add('opacity-100!')
+     CopiedSpan?.classList.remove('opacity-0')
     //  CopiedSpan?.classList.add('left-1')
      setTimeout(() => {
        CopiedSpan?.classList.remove('opacity-100!')
       //  CopiedSpan?.classList.remove('left-1')
       //  CopiedSpan?.classList.add('left-0')
+      CopiedSpan?.classList.add('opacity-0')
        CopiedSpan?.classList.remove('z-20!')
      }, 800);
      
